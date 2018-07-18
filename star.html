@@ -24,7 +24,10 @@
 		let x=5;
 		img.onload=() =>{
 			let setIn=setInterval(()=>{
-				ctx.clearRect(0,0,1000,600)
+				ctx.clearRect(0,0,1000,600);
+				if(x>=300){
+					x=0;
+				}
 				x+=2;
 				ctx.drawImage(img,0,0);
 				ctx.strokeStyle="red"
