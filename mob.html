@@ -1,0 +1,106 @@
+    <!DOCTYPE html>  
+    <html lang="en">  
+    <head>  
+        <meta charset="UTF-8">  
+        <meta name="viewport" content="width=device-width,maximum-scale=1.0, initial-scale=1.0,user-scalable=no">  
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">  
+        <title>WebSocket-mob</title> 
+        <style>
+           *{
+                margin: 0;
+                padding: 0
+            }
+            #Mycanvas{
+                width:100%;
+            }
+            html,body{
+                height:100vh
+            }
+        </style> 
+    </head>  
+    <body>  
+        <canvas id="Mycanvas"  style="border:1px solid #ccc"></canvas>
+         
+        <div>
+            <button id="sendBtn">重来一把</button> 
+        </div>  
+        <script>
+            function touchMoveFunc(e) {
+                console.log(e.changedTouches[0].clientX);
+                arr.push({"x":e.changedTouches[0].clientX,"y":e.changedTouches[0].clientY});
+                ctx.lineTo(e.changedTouches[0].clientX,e.changedTouches[0].clientY);
+                ctx.stroke()
+            }
+            function touchStartFunc(e) {
+                arr=[];
+                ctx.restore()
+                ctx.beginPath();
+                ctx.moveTo(document.clientX,document.clientY);
+                Mycanvas.addEventListener('touchmove',touchMoveFunc, false);
+            }
+            function touchEndFunc(e) {
+                arr.pop();
+                WebSocket.send(JSON.stringify(
+                {times:2,"arr":arr}));
+                arr=[];
+                ctx.save();
+                ctx.clip();
+            }
+            var WebSocket = new WebSocket("ws://47.104.20.197:3001"); 
+            let h=document.body.clientHeight*0.75;
+            let w=document.body.clientWidth;
+            let Mycanvas=document.getElementById('Mycanvas');
+            Mycanvas.setAttribute("height",h);
+            Mycanvas.setAttribute("width",w);
+            let ctx=Mycanvas.getContext("2d"); 
+            let drawTime=0;
+            let arr=[];
+            let data;
+            ctx.font="20px Georgia";
+            let gradient=ctx.createLinearGradient(0,0,1000,0);
+            gradient.addColorStop("0","magenta");
+            gradient.addColorStop("0.5","blue");
+            gradient.addColorStop("1.0","red");
+            // Fill with gradient
+            ctx.fillStyle=gradient;
+            WebSocket.onopen = function(){ 
+                var openData=JSON.stringify({times:1})
+                WebSocket.send(openData);  
+            }  
+            WebSocket.onclose = function(){  
+                console.log('websocket close');  
+            } 
+            WebSocket.onmessage = function(e){  
+                data=JSON.parse(e.data);
+                console.log(data)
+                if(data.times==1){
+                    sessionStorage.setItem("person",data.person)
+                    ctx.fillText(data.descp,10,50);
+                    if(data.person==1){
+                        Mycanvas.addEventListener('touchstart',touchStartFunc, false);
+                        Mycanvas.addEventListener('touchend',touchEndFunc, false);
+                    }
+                   
+                }else if(data.times==2&&sessionStorage.getItem("person")!=1){
+                    drawTime++;
+                    ctx.beginPath();
+                    try{
+                         ctx.moveTo(data.arr[0].x,data.arr[0].y);
+                    }catch(e){
+                        console.log(e)
+                    }
+                    data.arr.map(function(item){
+                        ctx.lineTo(item.x,item.y);
+                    })
+                    ctx.stroke();
+                }else if(data.times==3&&data.descp=="reset"){
+                    window.location.reload();
+                }
+            }
+            document.getElementById("sendBtn").onclick=function(){
+                let openData=JSON.stringify({times:3,descp:"reset"})
+                WebSocket.send(openData);  
+            }
+        </script>
+    </body>  
+    </html>  
