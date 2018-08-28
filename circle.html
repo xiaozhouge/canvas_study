@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+	<style>
+		#myCanvas{
+			border:1px solid #ccc;
+			/*background: #000*/
+		}
+	</style>
+</head>
+<body>
+	<div id="first">
+		第一个圆
+		x1: <input type="text" value="100">
+		y1: <input type="text" value="100">
+		r1: <input type="text" value="50">
+	</div>
+	<div id="second">
+		第二个圆
+		x2: <input type="text" value="170">
+		y2: <input type="text" value="100">
+		r2: <input type="text" value="50">
+	</div>
+	<button onclick="cala()">计算</button>
+	<div id="sum">相交面积：</div>
+	<canvas id="myCanvas" width="800" height="600">您的浏览器不支持canvas</canvas>
+	
+	<script>
+		let ctx=document.getElementById("myCanvas").getContext("2d");
+		let f1=document.getElementById("first").children;
+		let f2=document.getElementById("second").children;
+		let sum=document.getElementById("sum");
+		let cala=()=>{
+			draw(f1[0].value,f1[1].value,f1[2].value,f2[0].value,f2[1].value,f2[2].value)
+			let tmp=intersect(Number(f1[0].value),Number(f1[1].value),Number(f1[2].value),Number(f2[0].value),Number(f2[1].value),Number(f2[2].value))
+			sum.innerHTML="相交面积为："+tmp
+		}
+		
+        function draw(x1,y1,r1,x2,y2,r2){
+        	ctx.restore()
+        	ctx.clearRect(0,0,800,600)
+        	ctx.save();
+        	ctx.beginPath();
+			ctx.arc(x1,y1,r1,0,2*Math.PI);
+			ctx.stroke();
+
+			ctx.beginPath();
+			ctx.arc(x2,y2,r2,0,2*Math.PI)
+			ctx.stroke();
+
+			ctx.beginPath();
+			ctx.arc(x1,y1,r1,0,2*Math.PI);
+			ctx.clip();
+			ctx.beginPath();
+			ctx.arc(x2,y2,r2,0,2*Math.PI)
+			ctx.clip();
+
+			ctx.beginPath();
+			ctx.arc(x2,y2,r2,0,2*Math.PI)
+			ctx.fill();
+			ctx.beginPath();
+			ctx.arc(x1,y1,r1,0,2*Math.PI);
+			ctx.fill();
+        }
+		function intersect( x1, y1, r1, x2, y2, r2){
+			let s,temp,p,l,ans;
+			l=Math.sqrt((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1));
+			if(l>=r1+r2){
+				ans=0;
+			}	
+			else if(l<=Math.abs(r1-r2)){
+				if(r1<=r2){
+					ans=Math.PI*r1*r1;
+				}else{
+					ans=Math.PI*r2*r2;
+				}			
+			}
+			else{
+				p=(l+r1+r2)/2;
+				s=2*Math.sqrt(p*(p-l)*(p-r1)*(p-r2));
+				if(r1>r2){
+					temp=x1;x1=x2;x2=temp;
+					temp=y1;y1=y2;y2=temp;
+		            temp=r1;r1=r2;r2=temp;
+				}
+				ans=Math.acos((r1*r1+l*l-r2*r2)/(2*r1*l))*r1*r1+Math.acos((r2*r2+l*l-r1*r1)/(2*r2*l))*r2*r2-s;
+			}
+			return ans;
+		}
+	</script>
+</body>
+</html>
